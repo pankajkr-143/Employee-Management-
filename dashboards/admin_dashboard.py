@@ -10,6 +10,7 @@ import os
 from PIL import Image, ImageTk
 import random
 import string
+import sys
 
 class AdminDashboard(ttk.Frame):
     def __init__(self, parent, current_user, logout_callback):
@@ -58,8 +59,16 @@ class AdminDashboard(ttk.Frame):
         # HEADER
         header_frame = ttk.Frame(self, style='Card.TFrame')
         header_frame.pack(fill=tk.X, pady=(0, 10))
-        from PIL import Image, ImageTk
-        logo_img = Image.open('assets/images/logo.jpg')
+        
+        # Construct the absolute path to the image file
+        if getattr(sys, '_MEIPASS', False):
+            # Running as a bundled executable
+            logo_path = os.path.join(sys._MEIPASS, 'assets/images/logo.jpg')
+        else:
+            # Running as a script
+            logo_path = 'assets/images/logo.jpg'
+            
+        logo_img = Image.open(logo_path)
         logo_img = logo_img.resize((80, 40), Image.Resampling.LANCZOS)
         logo = ImageTk.PhotoImage(logo_img)
         logo_label = ttk.Label(header_frame, image=logo)
@@ -525,10 +534,13 @@ class AdminDashboard(ttk.Frame):
             messagebox.showinfo("Info", "Please select a user to view their profile.")
             return
         # Get the selected user's employee_id
-        employee_id = self.tree.item(selected[0])['values'][3]  # Employee ID column
+        employee_id = self.tree.item(selected[0])['values'][0]  # Corrected: Employee ID is at index 0
+        
+        # The code below checks if employee_id is valid before proceeding
         if not employee_id or employee_id == 'Not Linked':
             messagebox.showinfo("Profile", "This user is not linked to any employee profile.")
             return
+        
         dialog = tk.Toplevel(self)
         dialog.title("Employee Profile")
         dialog.geometry("600x400")

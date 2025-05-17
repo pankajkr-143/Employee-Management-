@@ -1,7 +1,16 @@
 import sqlite3
 import os
+import sys
 
-DB_PATH = os.path.join('database', 'ems.db')
+# Determine the base path for the application
+if getattr(sys, '_MEIPASS', False):
+    # Running as a bundled executable
+    BASE_PATH = sys._MEIPASS
+else:
+    # Running as a script - get the directory of the main script
+    BASE_PATH = os.path.abspath(os.path.dirname(sys.argv[0]))
+
+DB_PATH = os.path.join(BASE_PATH, 'database', 'ems.db')
 
 def get_db_connection():
     """Create a database connection"""

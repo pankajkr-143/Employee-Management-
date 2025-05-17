@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from employee.view_profile import ProfileView
 import os
+import sys
+from PIL import Image, ImageTk
 
 class EmployeeDashboard(ttk.Frame):
     def __init__(self, parent, current_user, on_logout):
@@ -15,8 +17,16 @@ class EmployeeDashboard(ttk.Frame):
         # HEADER
         header_frame = ttk.Frame(self, style='Card.TFrame')
         header_frame.pack(fill=tk.X, pady=(0, 10))
-        from PIL import Image, ImageTk
-        logo_img = Image.open('assets/images/logo.jpg')
+        
+        # Construct the absolute path to the image file
+        if getattr(sys, '_MEIPASS', False):
+            # Running as a bundled executable
+            logo_path = os.path.join(sys._MEIPASS, 'assets/images/logo.jpg')
+        else:
+            # Running as a script
+            logo_path = 'assets/images/logo.jpg'
+            
+        logo_img = Image.open(logo_path)
         logo_img = logo_img.resize((80, 40), Image.Resampling.LANCZOS)
         logo = ImageTk.PhotoImage(logo_img)
         logo_label = ttk.Label(header_frame, image=logo)
@@ -53,15 +63,24 @@ class EmployeeDashboard(ttk.Frame):
         if employee:
             emp = dict(employee)
             # Photo
-            photo_path = f"assets/photos/employee_{emp.get('id', '')}"
+            photo_path_base = f"assets/photos/employee_{emp.get('id', '')}"
             photo_ext = None
             for ext in ['.png', '.jpg', '.jpeg', '.gif', '.bmp']:
-                if os.path.exists(photo_path + ext):
+                # Construct the absolute path to the photo file
+                if getattr(sys, '_MEIPASS', False):
+                    # Running as a bundled executable
+                    current_photo_path = os.path.join(sys._MEIPASS, photo_path_base + ext)
+                else:
+                    # Running as a script
+                    current_photo_path = photo_path_base + ext
+
+                if os.path.exists(current_photo_path):
                     photo_ext = ext
+                    photo_path = current_photo_path # Use the correctly constructed path
                     break
+            
             if photo_ext:
-                from PIL import Image, ImageTk
-                image = Image.open(photo_path + photo_ext)
+                image = Image.open(photo_path)
                 image = image.resize((140, 140), Image.Resampling.LANCZOS)
                 photo = ImageTk.PhotoImage(image)
                 photo_label = ttk.Label(profile_card, image=photo)

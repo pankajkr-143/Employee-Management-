@@ -3,6 +3,8 @@ from tkinter import ttk, messagebox
 from utils.db import get_db_connection
 from utils.hash_util import verify_password
 from PIL import Image, ImageTk
+import os
+import sys
 
 class LoginFrame(ttk.Frame):
     def __init__(self, parent, on_login_success):
@@ -16,7 +18,16 @@ class LoginFrame(ttk.Frame):
         # HEADER
         header_frame = ttk.Frame(self, style='Card.TFrame')
         header_frame.pack(fill=tk.X, pady=(0, 20))
-        logo_img = Image.open('assets/images/logo.jpg')
+        
+        # Construct the absolute path to the image file
+        if getattr(sys, '_MEIPASS', False):
+            # Running as a bundled executable
+            logo_path = os.path.join(sys._MEIPASS, 'assets/images/logo.jpg')
+        else:
+            # Running as a script
+            logo_path = 'assets/images/logo.jpg'
+            
+        logo_img = Image.open(logo_path)
         logo_img = logo_img.resize((80, 40), Image.Resampling.LANCZOS)
         logo = ImageTk.PhotoImage(logo_img)
         logo_label = ttk.Label(header_frame, image=logo)
