@@ -12,25 +12,23 @@ class EmployeeDashboard(ttk.Frame):
     
     def setup_ui(self):
         """Setup the employee dashboard UI"""
-        # Header
-        header_frame = ttk.Frame(self)
-        header_frame.pack(fill=tk.X, pady=(0, 20))
-        
-        # Welcome message
-        welcome_label = ttk.Label(header_frame,
-                                text=f"Welcome, {self.current_user['username']}!",
-                                font=("Segoe UI", 16, "bold"))
-        welcome_label.pack(side=tk.LEFT)
-        
-        # Navigation buttons
+        # HEADER
+        header_frame = ttk.Frame(self, style='Card.TFrame')
+        header_frame.pack(fill=tk.X, pady=(0, 10))
+        from PIL import Image, ImageTk
+        logo_img = Image.open('assets/images/logo.jpg')
+        logo_img = logo_img.resize((80, 40), Image.Resampling.LANCZOS)
+        logo = ImageTk.PhotoImage(logo_img)
+        logo_label = ttk.Label(header_frame, image=logo)
+        logo_label.image = logo
+        logo_label.pack(side=tk.LEFT, padx=(10, 10))
+        ttk.Label(header_frame, text="Employee Management System", font=("Segoe UI", 18, "bold"), foreground="black").pack(side=tk.LEFT, padx=(0, 20))
         nav_frame = ttk.Frame(header_frame)
         nav_frame.pack(side=tk.RIGHT)
-        ttk.Button(nav_frame, text="View Profile",
-                  command=self.show_profile, style='Primary.TButton').pack(side=tk.LEFT, padx=5)
-        ttk.Button(nav_frame, text="Logout",
-                  command=self.on_logout, style='Secondary.TButton').pack(side=tk.LEFT, padx=5)
+        ttk.Button(nav_frame, text="View Profile", command=self.show_profile, style='Primary.TButton').pack(side=tk.LEFT, padx=5)
+        ttk.Button(nav_frame, text="Logout", command=self.on_logout, style='Secondary.TButton').pack(side=tk.LEFT, padx=5)
         
-        # Main content
+        # CONTENT
         content_frame = ttk.Frame(self)
         content_frame.pack(fill=tk.BOTH, expand=True)
         
@@ -40,10 +38,18 @@ class EmployeeDashboard(ttk.Frame):
         
         # Get employee info
         employee = None
+        emp = None
         if self.current_user.get('employee_id'):
             from employee.crud import EmployeeCRUD
             employee = EmployeeCRUD.get_employee(self.current_user['employee_id'])
-        
+        if not employee:
+            from employee.crud import EmployeeCRUD
+            all_emps = EmployeeCRUD.get_all_employees()
+            for e in all_emps:
+                if (e.get('email') and e.get('email') == self.current_user.get('username')) or \
+                   (e.get('first_name') and e.get('first_name').lower() == self.current_user.get('username').lower()):
+                    employee = e
+                    break
         if employee:
             emp = dict(employee)
             # Photo
@@ -62,7 +68,7 @@ class EmployeeDashboard(ttk.Frame):
                 photo_label.image = photo
                 photo_label.grid(row=0, column=0, rowspan=8, padx=(0, 30), pady=10)
             else:
-                photo_label = ttk.Label(profile_card, text="No Photo", font=("Segoe UI", 12, "italic"))
+                photo_label = ttk.Label(profile_card, text="No Photo", font=("Segoe UI", 12, "italic"), foreground="black")
                 photo_label.grid(row=0, column=0, rowspan=8, padx=(0, 30), pady=10)
             # Details
             details = [
@@ -77,10 +83,15 @@ class EmployeeDashboard(ttk.Frame):
                 ("Hire Date:", emp.get('hire_date', '')),
             ]
             for i, (label, value) in enumerate(details):
-                ttk.Label(profile_card, text=label, font=("Segoe UI", 12, "bold")).grid(row=i, column=1, sticky=tk.W, pady=6)
-                ttk.Label(profile_card, text=value, font=("Segoe UI", 12)).grid(row=i, column=2, sticky=tk.W, pady=6)
+                ttk.Label(profile_card, text=label, font=("Segoe UI", 12, "bold"), foreground="black").grid(row=i, column=1, sticky=tk.W, pady=6)
+                ttk.Label(profile_card, text=value, font=("Segoe UI", 12), foreground="black").grid(row=i, column=2, sticky=tk.W, pady=6)
         else:
-            ttk.Label(profile_card, text="No employee profile found", font=("Segoe UI", 14)).pack(pady=20)
+            ttk.Label(profile_card, text="No employee profile found. Please contact your administrator to link your account.", font=("Segoe UI", 14), foreground="black").pack(pady=20)
+        
+        # FOOTER
+        footer = ttk.Frame(self, style='Card.TFrame')
+        footer.pack(side=tk.BOTTOM, fill=tk.X)
+        ttk.Label(footer, text="© 2024 Employee Management System", font=("Segoe UI", 10), foreground="black").pack(pady=5)
     
     def show_profile(self):
         """Show user's profile"""
@@ -90,4 +101,27 @@ class EmployeeDashboard(ttk.Frame):
             profile_window.geometry("400x500")
             ProfileView(profile_window, self.current_user['employee_id']).pack(fill=tk.BOTH, expand=True)
         else:
-            messagebox.showinfo("Info", "No employee profile linked to this account") 
+            messagebox.showinfo("Info", "No employee profile linked to this account")
+
+    def setup_styles(self):
+        style = ttk.Style()
+        self.colors = {
+            'primary': '#2196F3',  # blue
+            'success': '#4CAF50',  # green
+            'danger': '#F44336',   # red
+            'secondary': '#B0BEC5', # gray
+            'light': '#F5F5F5',
+            'dark': '#212121'
+        }
+        style.configure('Header.TLabel', font=('Segoe UI', 24, 'bold'), foreground='black')
+        style.configure('Subheader.TLabel', font=('Segoe UI', 16), foreground='black')
+        style.configure('Stats.TLabel', font=('Segoe UI', 14), foreground='black')
+        style.configure('Card.TFrame', background=self.colors['light'], relief='solid', borderwidth=1)
+        style.configure('Primary.TButton', font=('Segoe UI', 10, 'bold'), background=self.colors['primary'], foreground='black', borderwidth=0)
+        style.map('Primary.TButton', background=[('active', self.colors['primary'])], foreground=[('active', 'black')])
+        style.configure('Success.TButton', font=('Segoe UI', 10, 'bold'), background=self.colors['success'], foreground='black', borderwidth=0)
+        style.map('Success.TButton', background=[('active', self.colors['success'])], foreground=[('active', 'black')])
+        style.configure('Danger.TButton', font=('Segoe UI', 10, 'bold'), background=self.colors['danger'], foreground='black', borderwidth=0)
+        style.map('Danger.TButton', background=[('active', self.colors['danger'])], foreground=[('active', 'black')])
+        style.configure('Secondary.TButton', font=('Segoe UI', 10), background=self.colors['secondary'], foreground='black', borderwidth=0)
+        style.map('Secondary.TButton', background=[('active', self.colors['secondary'])], foreground=[('active', 'black')]) 

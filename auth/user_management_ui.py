@@ -262,13 +262,12 @@ class UserManagementUI(ttk.Frame):
         dialog.geometry(f'{width}x{height}+{x}+{y}')
         
         # Create employee list
-        ttk.Label(dialog, text="Select Employee:").pack(pady=(20, 5))
-        
+        ttk.Label(dialog, text="Select Employee:", font=("Segoe UI", 12, "bold"), foreground="black").pack(pady=(20, 5))
         employee_frame = ttk.Frame(dialog)
         employee_frame.pack(fill=tk.BOTH, expand=True, padx=20)
         
         # Create Treeview for employees
-        columns = ('ID', 'Name', 'Department', 'Position')
+        columns = ('ID', 'Full Name', 'Department', 'Position')
         tree = ttk.Treeview(
             employee_frame,
             columns=columns,
@@ -277,15 +276,9 @@ class UserManagementUI(ttk.Frame):
         )
         
         # Configure columns
-        tree.heading('ID', text='ID')
-        tree.heading('Name', text='Name')
-        tree.heading('Department', text='Department')
-        tree.heading('Position', text='Position')
-        
-        tree.column('ID', width=50)
-        tree.column('Name', width=150)
-        tree.column('Department', width=100)
-        tree.column('Position', width=100)
+        for col in columns:
+            tree.heading(col, text=col, anchor=tk.CENTER)
+            tree.column(col, width=140 if col == 'Full Name' else 100, anchor=tk.CENTER)
         
         # Add scrollbar
         scrollbar = ttk.Scrollbar(
@@ -302,11 +295,13 @@ class UserManagementUI(ttk.Frame):
         # Load employees
         employees = EmployeeCRUD.get_all_employees()
         for employee in employees:
+            emp = dict(employee)
+            full_name = f"{emp.get('first_name', '')} {emp.get('last_name', '')}".strip()
             tree.insert('', tk.END, values=(
-                employee['id'],
-                employee['name'],
-                employee['department'],
-                employee['position']
+                emp.get('id', ''),
+                full_name,
+                emp.get('department', ''),
+                emp.get('position', '')
             ))
             
         def link_selected():
@@ -332,18 +327,17 @@ class UserManagementUI(ttk.Frame):
         # Add buttons
         button_frame = ttk.Frame(dialog)
         button_frame.pack(pady=20)
-        
         ttk.Button(
             button_frame,
             text="Link",
             command=link_selected,
-            style='Accent.TButton'
+            style='Success.TButton'
         ).pack(side=tk.LEFT, padx=5)
-        
         ttk.Button(
             button_frame,
             text="Cancel",
-            command=dialog.destroy
+            command=dialog.destroy,
+            style='Secondary.TButton'
         ).pack(side=tk.LEFT, padx=5)
         
     def delete_user(self):
